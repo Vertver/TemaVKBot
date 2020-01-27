@@ -49,18 +49,21 @@ typedef utf8* PStr;
 typedef utf8 const* PConstStr;
 
 #if defined (_WIN32) || defined(_WIN64)
-#define OS_WINDOW
+#define OS_WINDOWS
 #endif
 
-#ifdef OS_WINDOW
+#ifdef OS_WINDOWS
 #include <Windows.h>
 
+#define IsInvalidHandle(x) (x == 0 || x == INVALID_HANDLE_VALUE)
 #define MAX_PATH 260
+
 typedef wchar_t utf16;
 typedef utf8 stringPath[MAX_PATH];
 typedef utf8 stringName[MAX_PATH];
 typedef utf16 wstringPath[MAX_PATH];
 #else
+#include <pthread.h>
 #define PATH_MAX 4096 
 #define NAME_MAX 256 
 typedef u16 utf16;
@@ -101,17 +104,30 @@ typedef utf16 wstring16k[16384];
 typedef utf16 wstring32k[32768];
 typedef utf16 wstring64k[65536];
 
+#ifdef OS_WINDOWS
+inline
+int
+ConvertToUTF16(
+	const char* pUTF8String,
+	wstring4k& stringConverted		// 8кбайт более чем достаточно, да
+)
+{
+	return MultiByteToWideChar(CP_UTF8, 0, pUTF8String, -1, stringConverted, ARRAYSIZE(stringConverted));
+}
+#endif
+
 enum ModuleType : i32
 {
-	eNoneType,
-	eTemaBotType
+	eNoneType,				// Для пустых интерфейсов бота
+	eTemaBotType			// Базовый класс для бизнес логики бота  
 };
 
 struct TemaAuthStruct
 {
-	const char* pVkBotKeyString = nullptr;
-	const char* pLoginString = nullptr;
-	const char* pPasswordString = nullptr;
+	const char* pSessionString = nullptr;			// Название сессии, для упрощения ориентации в коде
+	const char* pVkBotKeyString = nullptr;			// Ключ для использование VK API, прости его господи
+	const char* pLoginString = nullptr;				// Логин для бота (а вы думали, можно как анонимус сидеть? Хер там!)
+	const char* pPasswordString = nullptr;			// Пароль для бота (сейм что и логин по значению)
 };
 
 class ITemaInterface
@@ -127,4 +143,66 @@ public:
 
 	virtual void GetModuleName(string256& szModuleName) = 0;
 	virtual void GetModuleType(ModuleType& type) = 0;
+};
+
+class CSimpleEvent
+{
+private:
+	void* hEvent = nullptr;
+
+public:
+	CSimpleEvent();
+	~CSimpleEvent();
+
+	void Raise();
+	void Reset();
+	void Wait();
+	bool Wait(i32 TimeToWait);
+	bool IsRaised();
+};
+
+typedef i32(WORKERPROC)(void* pInstance);
+
+struct WorkerThreadStruct
+{
+	u32 WorkerThreadId = (u32)-2;		// Стандартное значение для функции GetCurrentThreadId()
+	size_t WorkerIndex = 0;
+	void* ThreadHandle = nullptr;
+	void* EventEndHandle = nullptr;
+	WORKERPROC* pWorkerFunc = nullptr;
+	string64 WorkerNameString = {};
+	string256 WorkerDescriptionString = {};
+};
+
+struct WorkersList
+{
+	WorkersList* pPrevious = nullptr;
+	WorkersList* pNext = nullptr;
+	void* pContext = nullptr;
+	WorkerThreadStruct* pWorkerStruct = nullptr;
+};
+
+struct WorkerArg
+{
+	void* EventEndHandle = nullptr;
+	void* ThreadHandle = nullptr;
+};
+
+class CWorkerSpawner
+{
+private:
+	WorkersList* pFirstWorker = nullptr;
+
+	void* SpawnThread(WORKERPROC* pWorkerFunc, void* pArg);
+	bool DestroyThread(size_t ThreadId);
+
+public:
+	CWorkerSpawner();
+	~CWorkerSpawner();
+
+	bool AddWorker(WORKERPROC* pWorkerFunc, void* pArg, i32& WorkerId);
+	bool DeleteWorker(i32 WorkerId);
+
+	void GetWorkerName(i32 WorkerId, string64& name);
+	void GetWorkerDescription(i32 WorkerId, string64& description);
 };
