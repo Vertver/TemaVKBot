@@ -30,3 +30,8 @@
 *.exe
 *.out
 *.app
+TemaVKBot/.vs/TemaVKBot/v16/.suo
+*.db
+*.opendb
+*.ipch
+*.pdb
