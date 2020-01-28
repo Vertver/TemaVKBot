@@ -1,4 +1,7 @@
 # TemaVKBot
+
+[![GitHub контрибьютеры](https://img.shields.io/github/contributors/Vertver/TemaVKBot.svg)](https://github.com/Vertver/TemaVKBot/graphs/contributors)
+
 Бот, который дополнит ваши беседы бесполезным трепом
 
 ![Артемий Лебедев](https://github.com/Vertver/TemaVKBot/blob/master/artemiy-photo.jpg)
