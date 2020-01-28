@@ -30,8 +30,12 @@
 *.exe
 *.out
 *.app
-TemaVKBot/.vs/TemaVKBot/v16/.suo
 *.db
 *.opendb
 *.ipch
 *.pdb
+
+# Folders
+TemaVKBot/.vs/
+TemaVKBot/build/
+TemaVKBot/out

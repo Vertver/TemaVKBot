@@ -176,7 +176,6 @@ struct WorkerThreadStruct
 
 struct WorkersList
 {
-	WorkersList* pPrevious = nullptr;
 	WorkersList* pNext = nullptr;
 	void* pContext = nullptr;
 	WorkerThreadStruct* pWorkerStruct = nullptr;
@@ -191,6 +190,7 @@ struct WorkerArg
 class CWorkerSpawner
 {
 private:
+	u32 WorkersCount = 0;
 	WorkersList* pFirstWorker = nullptr;
 
 	void* SpawnThread(WORKERPROC* pWorkerFunc, void* pArg);

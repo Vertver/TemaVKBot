@@ -43,9 +43,9 @@ public:
 
 #ifdef OS_WINDOWS
 #define PRINT_DEBUGGER(x) \
-	if (IsDebuggerPresent()) {
-		ConvertToUTF16
-		OutputDebugStringW();
+	if (IsDebuggerPresent()) { \
+		ConvertToUTF16 \
+		OutputDebugStringW(); \
 	}
 #endif
 

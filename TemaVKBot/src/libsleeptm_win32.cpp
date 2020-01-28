@@ -21,7 +21,7 @@ slInitialize(
 	if (pNtDelayExecution) return -1;		// we are already initialized
 	hModule = GetModuleHandleA("ntdll");
 	if (!hModule || hModule == INVALID_HANDLE_VALUE) return -1;
-	pNtDelayExecution = GetProcAddress(hModule, "NtDelayExecution");
+	pNtDelayExecution = (PNTDELAYEXECUTION)GetProcAddress(hModule, "NtDelayExecution");
 	if (!pNtDelayExecution) return -1;
 
 	/*

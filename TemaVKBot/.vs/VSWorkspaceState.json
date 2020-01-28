@@ -1,8 +1,11 @@
 {
   "ExpandedNodes": [
     "",
-    "\\src"
+    "\\src",
+    "\\VK",
+    "\\VK\\examples",
+    "\\VK\\examples\\graffiti",
+    "\\VK\\src"
   ],
-  "SelectedNode": "\\CMakeSettings.json",
   "PreviewInSolutionExplorer": false
 }

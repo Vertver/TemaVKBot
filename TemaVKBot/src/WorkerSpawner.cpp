@@ -19,18 +19,6 @@
 #include "TemaVKBot.h"
 #include <process.h>
 
-struct ThreadProcWorker
-{
-
-}
-
-void 
-ThreadWorkerFuncProc(
-
-)
-{
-}
-
 CSimpleEvent::CSimpleEvent()
 {
 #ifdef OS_WINDOWS
@@ -136,7 +124,7 @@ CWorkerSpawner::SpawnThread(
 		В винде используем эту функцию, потому что при использование CreateThread 
 		CRT неправильно очищается.
 	*/
-	void* threadHandle = _beginthread((_beginthread_proc_type)pWorkerFunc, 0, pArg);
+	void* threadHandle = (void*)_beginthread((_beginthread_proc_type)pWorkerFunc, 0, pArg);
 	return IsInvalidHandle(threadHandle) ? nullptr : threadHandle;
 #else 
 	/*
@@ -157,22 +145,24 @@ CWorkerSpawner::DestroyThread(
 
 	while (pCurrentTemp) {
 		if (pCurrentTemp->pWorkerStruct->WorkerThreadId == ThreadId) {
-#ifdef OS_WINDOWS
 			/* Убеждаемся, что эвент нормальный и идем дальше. */
-			if (!IsInvalidHandle(pCurrentTemp->pWorkerStruct->EventEndHandle)) {
-				if (!SetEvent((HANDLE)pCurrentTemp->pWorkerStruct->EventEndHandle)) return false;
-			}
+			CSimpleEvent* pSimpleEvent = (CSimpleEvent*)pCurrentTemp->pWorkerStruct->EventEndHandle;
+			if (pSimpleEvent) {
+				pSimpleEvent->Raise();
 
-			/* 
-				Обычно 50-100 миллисекунд хватает для уничтожения контекста, но если 
-				не хватает - не стесняемся удалять поток по-жесткому.
-			*/
-			if (WaitForSingleObject((HANDLE)pCurrentTemp->pWorkerStruct->ThreadHandle, 100) == WAIT_TIMEOUT) {
-				::TerminateThread((HANDLE)pCurrentTemp->pWorkerStruct->ThreadHandle, 0xFFFFFEE);
-			}
+#ifdef OS_WINDOWS
+				/*
+					Обычно 50-100 миллисекунд хватает для уничтожения контекста, но если
+					не хватает - не стесняемся удалять поток по-жесткому.
+				*/
+				if (WaitForSingleObject((HANDLE)pCurrentTemp->pWorkerStruct->ThreadHandle, 100) == WAIT_TIMEOUT) {
+					::TerminateThread((HANDLE)pCurrentTemp->pWorkerStruct->ThreadHandle, 0xFFFFFEE);
+				}
 #else
 
 #endif
+			}
+
 			return true;
 		}
 	}
@@ -191,21 +181,36 @@ CWorkerSpawner::AddWorker(
 	WorkerThreadStruct* pWorkerStruct = nullptr;
 	WorkersList* pWorker = nullptr;
 
-	pWorker = malloc(sizeof(WorkersList));
+	pWorker = (WorkersList*)malloc(sizeof(WorkersList));
 	if (!pWorker) return false;		// Серьезно, если у вас здесь повалилось - у вас явно ведро и скоро должен быть kernel panic.
 
-	pWorker->pWorkerStruct = malloc(sizeof(WorkerThreadStruct));
+	pWorker->pWorkerStruct = (WorkerThreadStruct*)malloc(sizeof(WorkerThreadStruct));
 	if (!pWorker->pWorkerStruct) return false;		// Вот правда, на тех же старых Orange Pi здесь падало иногда когда свапа не хватало.
+
+	pWorker->pWorkerStruct->EventEndHandle = new CSimpleEvent;
+	pWorker->pWorkerStruct->pWorkerFunc = pWorkerFunc;
+	pWorker->pWorkerStruct->WorkerIndex = WorkersCount;
 
 	void* ThreadHandleTemp = SpawnThread(pWorkerFunc, pArg);
 	if (!ThreadHandleTemp) return false;
+
+	pWorker->pWorkerStruct->ThreadHandle = ThreadHandleTemp;
+#ifdef OS_WINDOWS
+	pWorker->pWorkerStruct->WorkerThreadId = GetThreadId((HANDLE)ThreadHandleTemp);
+#else
+	/*
+		TODO: 
+	*/
+#endif
 
 	/* Мне нравится этот код. */
 	WorkersList** ppWorker = &pFirstWorker;
 	while (*ppWorker) {
 		ppWorker = &((*ppWorker)->pNext);
-	}
-
+	}	
+	
+	WorkersCount++;
+	WorkerId = pWorker->pWorkerStruct->WorkerIndex;
 	*ppWorker = pWorker;
 	return true;
 }
@@ -215,7 +220,18 @@ CWorkerSpawner::DeleteWorker(
 	i32 WorkerId
 )
 {
+	WorkersList** ppWorker = &pFirstWorker;
+	WorkersList* pPreviousWorker = nullptr;
+	WorkersList* pCurrentWorker = nullptr;
+	while (*ppWorker) {
+		if ((*ppWorker)->pWorkerStruct->WorkerIndex == WorkerId) {
+			pCurrentWorker = (*ppWorker);
+			break;
+			//if (pPreviousWorker) pPreviousWorker->pNext = 
+		}
+	}
 
+	return false;
 }
 
 void
