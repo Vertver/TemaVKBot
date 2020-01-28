@@ -36,6 +36,6 @@
 *.pdb
 
 # Folders
-TemaVKBot/.vs/
-TemaVKBot/build/
-TemaVKBot/out
+.vs/
+build/
+out
