@@ -20,6 +20,5 @@
 
 int main()
 {
-	MessageBoxW(nullptr, L"Тема Лебедев пидорас и хуесос", L"Тема Лебедев пидорас и хуесос", MB_OK | MB_ICONINFORMATION);
 	return 0;
 }
