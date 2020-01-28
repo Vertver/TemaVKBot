@@ -25,11 +25,21 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+if (NOT CMAKE_BUILD_TYPE)
+	set(CMAKE_BUILD_TYPE
+		"Release"
+		CACHE STRING
+		"Choose the type of build, options are: Debug Release"
+		FORCE)
+endif()
+message("Current build type": ${CMAKE_BUILD_TYPE})
+
 if(WIN32)
     if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
         set(LIB_DEBUG "d")
-    endif()        
-else()
+    endif()  
+    set(SYSTEM_IMP "_imp")      
+endif()
 
 ##################################################################
 # Задаем базовые переменные
@@ -62,7 +72,8 @@ ExternalProject_Add(curl
 )
 
 set(CURL_LIBRARIES_DIR ${CURL_INSTALL_DIR}/lib)
-set(CURL_LIBRARY ${CURL_INSTALL_DIR}/lib/curl.lib)
+
+set(CURL_LIBRARY ${CURL_INSTALL_DIR}/lib/libcurl${LIB_DEBUG}${SYSTEM_IMP}.lib)
 
 ##################################################################
 # Создаем директорию с исходниками бота
