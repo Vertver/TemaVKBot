@@ -62,7 +62,7 @@ ExternalProject_Add(curl
 )
 
 set(CURL_LIBRARIES_DIR ${CURL_INSTALL_DIR}/lib)
-set(CURL_LIBRARY ${CURL_INSTALL_DIR}/lib/curl.lib)
+set(CURL_LIBRARY ${CURL_INSTALL_DIR}/lib/libcurl${LIB_DEBUG}_imp.lib)
 
 ##################################################################
 # Создаем директорию с исходниками бота
