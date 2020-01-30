@@ -226,9 +226,15 @@ CWorkerSpawner::DeleteWorker(
 	while (*ppWorker) {
 		if ((*ppWorker)->pWorkerStruct->WorkerIndex == WorkerId) {
 			pCurrentWorker = (*ppWorker);
+			if (pPreviousWorker) pPreviousWorker->pNext = pCurrentWorker->pNext;
 			break;
-			//if (pPreviousWorker) pPreviousWorker->pNext = 
 		}
+	}
+
+	if (pCurrentWorker) {
+		if (pCurrentWorker->pContext) free(pCurrentWorker->pContext);
+		if (pCurrentWorker->pWorkerStruct) free(pCurrentWorker->pWorkerStruct);
+		free(pCurrentWorker);
 	}
 
 	return false;
@@ -240,7 +246,19 @@ CWorkerSpawner::GetWorkerName(
 	string64& name
 )
 {
+	WorkersList** ppWorker = &pFirstWorker;
+	WorkersList* pCurrentWorker = nullptr;
 
+	while (*ppWorker) {
+		if ((*ppWorker)->pWorkerStruct->WorkerIndex == WorkerId) {
+			pCurrentWorker = (*ppWorker);
+			break;
+		}
+	}
+
+	if (pCurrentWorker) {
+		memcpy(name, pCurrentWorker->pWorkerStruct->WorkerNameString, sizeof(name));
+	}
 }
 
 void
@@ -249,5 +267,17 @@ CWorkerSpawner::GetWorkerDescription(
 	string64& description
 )
 {
+	WorkersList** ppWorker = &pFirstWorker;
+	WorkersList* pCurrentWorker = nullptr;
 
+	while (*ppWorker) {
+		if ((*ppWorker)->pWorkerStruct->WorkerIndex == WorkerId) {
+			pCurrentWorker = (*ppWorker);
+			break;
+		}
+	}
+
+	if (pCurrentWorker) {
+		memcpy(description, pCurrentWorker->pWorkerStruct->WorkerDescriptionString, sizeof(description));
+	}
 }
